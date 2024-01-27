@@ -42,3 +42,11 @@ func createUser(c *gin.Context) {
 	users[user.ID] = user
 	c.JSON(http.StatusCreated, user)
 }
+
+func getUsers(c *gin.Context) {
+	usersList := make([]User, 0, len(users))
+	for _, user := range users {
+		usersList = append(usersList, user)
+	}
+	c.JSON(http.StatusOK, usersList)
+}
