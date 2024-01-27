@@ -88,3 +88,20 @@ func updateUser(c *gin.Context) {
 	users[userID] = user
 	c.JSON(http.StatusOK, user)
 }
+
+func deleteUser(c *gin.Context) {
+	userID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+
+	_, exists := users[userID]
+	if !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	delete(users, userID)
+	c.JSON(http.StatusNoContent, nil)
+}
