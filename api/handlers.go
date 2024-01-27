@@ -1,83 +1,94 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
-	"github.com/gin-gonic/gin"
+
+	"github.com/gorilla/mux"
 	"github.com/google/uuid"
 	"github.com/MagisterUnivers/SIGMAsoftware-backend/models"
 )
 
-func CreateUser(c *gin.Context) {
+func CreateUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
-	if err := c.BindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	user.ID = uuid.New()
 	models.Users[user.ID] = user
-	c.JSON(http.StatusCreated, user)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(user)
 }
 
-func GetUsers(c *gin.Context) {
+func GetUsers(w http.ResponseWriter, r *http.Request) {
 	usersList := make([]models.User, 0, len(models.Users))
 	for _, user := range models.Users {
 		usersList = append(usersList, user)
 	}
-	c.JSON(http.StatusOK, usersList)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(usersList)
 }
 
-func GetUser(c *gin.Context) {
-	userID, err := uuid.Parse(c.Param("id"))
+func GetUser(w http.ResponseWriter, r *http.Request) {
+	userID, err := uuid.Parse(mux.Vars(r)["id"])
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
 		return
 	}
 
 	user, exists := models.Users[userID]
 	if !exists {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
 }
 
-func UpdateUser(c *gin.Context) {
-	userID, err := uuid.Parse(c.Param("id"))
+func UpdateUser(w http.ResponseWriter, r *http.Request) {
+	userID, err := uuid.Parse(mux.Vars(r)["id"])
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
 		return
 	}
 
 	user, exists := models.Users[userID]
 	if !exists {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
-	if err := c.BindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	models.Users[userID] = user
-	c.JSON(http.StatusOK, user)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
 }
 
-func DeleteUser(c *gin.Context) {
-	userID, err := uuid.Parse(c.Param("id"))
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	userID, err := uuid.Parse(mux.Vars(r)["id"])
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
 		return
 	}
 
 	_, exists := models.Users[userID]
 	if !exists {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
 	delete(models.Users, userID)
-	c.JSON(http.StatusNoContent, nil)
+
+	w.WriteHeader(http.StatusNoContent)
 }
