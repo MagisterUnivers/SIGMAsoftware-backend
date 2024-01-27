@@ -30,3 +30,15 @@ func main() {
 
 	router.Run(":8080")
 }
+
+func createUser(c *gin.Context) {
+	var user User
+	if err := c.BindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user.ID = uuid.New()
+	users[user.ID] = user
+	c.JSON(http.StatusCreated, user)
+}
