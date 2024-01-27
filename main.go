@@ -66,3 +66,25 @@ func getUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, user)
 }
+
+func updateUser(c *gin.Context) {
+	userID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+
+	user, exists := users[userID]
+	if !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	if err := c.BindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	users[userID] = user
+	c.JSON(http.StatusOK, user)
+}
