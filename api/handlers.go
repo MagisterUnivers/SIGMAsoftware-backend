@@ -90,5 +90,12 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	delete(models.Users, userID)
 
-	w.WriteHeader(http.StatusNoContent)
+	w.Header().Set("Content-Type", "application/json")
+  w.WriteHeader(http.StatusOK)
+
+  response := map[string]string{
+   "message": "User successfully deleted",
+  }
+
+  json.NewEncoder(w).Encode(response)
 }
